@@ -5,21 +5,19 @@ import io.restassured.response.Response;
 import org.json.simple.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
 public class RestAssuredTests {
-
-    static class GetRequests{
+    @BeforeAll
+    static void setUpAll() {
+        baseURI = "https://reqres.in/api";
+    }
+    @Nested
+    class GetRequests {
         static Response response;
-
-        @BeforeAll
-        static void setupAll() {
-             //response = RestAssured.get("https://reqres.in/api");
-             baseURI = "https://reqres.in/api";
-        }
-
         @Test
         @DisplayName("status code test")
         void statusCodeTest() {
@@ -54,16 +52,11 @@ public class RestAssuredTests {
         @Test
         @DisplayName("Check that the id in data of page on go from 1 to 6")
         void checkThatTheIdInDataOfPageOnGoFrom1To6() {
-            given().get("/users?page=1").then().body("data.id", hasItems(1,2,3,4,5,6));
+            given().get("/users?page=1").then().body("data.id", hasItems(1, 2, 3, 4, 5, 6));
         }
     }
-
-    static class PostRequest {
-        @BeforeAll
-        static void setupAll() {
-            baseURI = "https://reqres.in/api";
-        }
-
+    @Nested
+    class PostRequest {
         @Test
         @DisplayName("Check that the status code for post request is 201")
         void checkThatTheStatusCodeForPostRequestIs201() {
@@ -80,6 +73,62 @@ public class RestAssuredTests {
             then().
                     statusCode(201).log().all();
         }
+    }
+    @Nested
+    class PatchAndPutRequests {
+        @Test
+        @DisplayName("Check that a post request returns a 200 status code ")
+        void checkThatAPostRequestReturnsA200StatusCode() {
+            JSONObject request = new JSONObject();
+            request.put("name", "Amy");
+            request.put("job", "sergeant");
+
+            given().
+                    contentType(ContentType.JSON).// content sent is of type JSON
+                    accept(ContentType.JSON).//response is of type json
+                    body(request.toJSONString()).
+            when().
+                    patch("/users/3").
+            then().
+                    statusCode(200).log().all().
+                    body("name", equalTo("Amy")).
+                    body("job", equalTo("sergeant"));
+        }
+
+        @Test
+        @DisplayName("Check that put request is returning correct body")
+        void checkThatPutRequestIsReturningCorrectBody() {
+            JSONObject request = new JSONObject();
+            request.put("name", "Ginna");
+            request.put("job", "secretary");
+
+            given().
+                    contentType(ContentType.JSON).// content sent is of type JSON
+                    accept(ContentType.JSON).//response is of type json
+                    body(request.toJSONString()).
+            when().
+                    put("/users/2").
+            then().
+                    statusCode(200).log().all().
+                    body("name", equalTo("Ginna")).
+                    body("job", equalTo("secretary"));
+        }
+    }
+
+    @Nested
+    class DeleteRequests{
+        @Test
+        @DisplayName("Check that a delete requests returns status code 204")
+        void checkThatADeleteRequestsReturnsStatusCode204() {
+            given().
+            when().
+                    delete("/users/4").
+            then().
+                    statusCode(204).log().all();
+
+        }
 
     }
 }
+
+
